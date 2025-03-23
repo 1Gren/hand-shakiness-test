@@ -1,42 +1,41 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hand Shakiness Test</title>
-    <style>
-        body { text-align: center; font-family: Arial, sans-serif; }
-        #test-area { width: 300px; height: 300px; border: 2px solid black; margin: auto; position: relative; }
-    </style>
-</head>
-<body>
-    <h1>Hand Shakiness Test - No Movement Test</h1>
-    <p>Keep your mouse as still as possible in the box below.</p>
-    <div id="test-area"></div>
-    <p id="result"></p>
+<script>
+    let startTime, interval, deviations = [], tracking = false;
 
-    <script>
-        let startTime, interval, deviations = [];
+    function startTest() {
+        if (tracking) return; // Prevent multiple starts
+        tracking = true;
+        startTime = Date.now();
+        deviations = [];
+        document.getElementById("result").innerText = "Test in progress...";
 
-        document.getElementById("test-area").addEventListener("mouseenter", () => {
-            startTime = Date.now();
-            deviations = [];
-            interval = setInterval(() => {
-                let x = event.clientX, y = event.clientY;
-                deviations.push({ x, y, time: Date.now() - startTime });
-            }, 50);
-        });
+        // Listen for mouse movement
+        function trackMovement(event) {
+            deviations.push({ x: event.clientX, y: event.clientY, time: Date.now() - startTime });
+        }
 
-        document.getElementById("test-area").addEventListener("mouseleave", () => {
-            clearInterval(interval);
+        document.addEventListener("mousemove", trackMovement);
+
+        // Stop the test after 10 seconds
+        setTimeout(() => {
+            document.removeEventListener("mousemove", trackMovement);
+            tracking = false;
+
+            // Calculate total movement
             let totalDeviation = deviations.reduce((sum, point, i, arr) => {
                 if (i === 0) return sum;
                 let dx = point.x - arr[i - 1].x;
                 let dy = point.y - arr[i - 1].y;
                 return sum + Math.sqrt(dx * dx + dy * dy);
             }, 0);
+
             document.getElementById("result").innerText = `Total movement: ${totalDeviation.toFixed(2)} pixels`;
-        });
-    </script>
-</body>
-</html>
+        }, 10000); // 10 seconds
+    }
+
+    // Start test on spacebar press
+    document.addEventListener("keydown", (event) => {
+        if (event.code === "Space") {
+            startTest();
+        }
+    });
+</script>
