@@ -1,41 +1,39 @@
 <script>
-    let startTime, interval, deviations = [], tracking = false;
+    document.addEventListener("DOMContentLoaded", () => {
+        let startTime, deviations = [], tracking = false;
 
-    function startTest() {
-        if (tracking) return; // Prevent multiple starts
-        tracking = true;
-        startTime = Date.now();
-        deviations = [];
-        document.getElementById("result").innerText = "Test in progress...";
+        function startTest() {
+            if (tracking) return; // Prevent multiple starts
+            tracking = true;
+            startTime = Date.now();
+            deviations = [];
+            document.getElementById("result").innerText = "Test in progress...";
 
-        // Listen for mouse movement
-        function trackMovement(event) {
-            deviations.push({ x: event.clientX, y: event.clientY, time: Date.now() - startTime });
+            function trackMovement(event) {
+                deviations.push({ x: event.clientX, y: event.clientY, time: Date.now() - startTime });
+            }
+
+            document.addEventListener("mousemove", trackMovement);
+
+            setTimeout(() => {
+                document.removeEventListener("mousemove", trackMovement);
+                tracking = false;
+
+                let totalDeviation = deviations.reduce((sum, point, i, arr) => {
+                    if (i === 0) return sum;
+                    let dx = point.x - arr[i - 1].x;
+                    let dy = point.y - arr[i - 1].y;
+                    return sum + Math.sqrt(dx * dx + dy * dy);
+                }, 0);
+
+                document.getElementById("result").innerText = `Total movement: ${totalDeviation.toFixed(2)} pixels`;
+            }, 10000);
         }
 
-        document.addEventListener("mousemove", trackMovement);
-
-        // Stop the test after 10 seconds
-        setTimeout(() => {
-            document.removeEventListener("mousemove", trackMovement);
-            tracking = false;
-
-            // Calculate total movement
-            let totalDeviation = deviations.reduce((sum, point, i, arr) => {
-                if (i === 0) return sum;
-                let dx = point.x - arr[i - 1].x;
-                let dy = point.y - arr[i - 1].y;
-                return sum + Math.sqrt(dx * dx + dy * dy);
-            }, 0);
-
-            document.getElementById("result").innerText = `Total movement: ${totalDeviation.toFixed(2)} pixels`;
-        }, 10000); // 10 seconds
-    }
-
-    // Start test on spacebar press
-    document.addEventListener("keydown", (event) => {
-        if (event.code === "Space") {
-            startTest();
-        }
+        document.addEventListener("keydown", (event) => {
+            if (event.code === "Space") {
+                startTest();
+            }
+        });
     });
 </script>
